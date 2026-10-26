@@ -1,0 +1,1267 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Samima's 3D Royal Disneyland ✨ | Oct 28</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- React 18 + Babel + Three.js CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #0b0418;
+    }
+    .font-adventure { font-family: 'Fredoka', sans-serif; }
+    .font-serif-royal { font-family: 'Playfair Display', serif; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px) rotate(-1.5deg); }
+      40%, 80% { transform: translateX(8px) rotate(1.5deg); }
+    }
+    .animate-shake { animation: shake 0.45s ease-in-out; }
+    .glass-royal {
+      background: linear-gradient(135deg, rgba(24, 11, 48, 0.82), rgba(15, 7, 32, 0.88));
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(216, 180, 254, 0.35);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 25px rgba(168, 85, 247, 0.2);
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 7, 32, 0.6); }
+    ::-webkit-scrollbar-thumb { background: #a855f7; border-radius: 9999px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Strictly locked until October 28, 2026 at 00:00:00 (Midnight local time)
+    const BIRTHDAY_UNLOCK_TIME = new Date(2026, 9, 28, 0, 0, 0).getTime();
+
+    // ============================================================================
+    // 📸 SAMIMA'S LOCAL PHOTO GALLERY CONFIG (from your pic/ folder)
+    // Note: Keep the exact case sensitivity of your filenames (e.g., .jpg vs .JPG)
+    // ============================================================================
+    const INITIAL_PHOTOS = [
+      {
+        id: 1,
+        title: "The Iconic Yellow Dress 💛",
+        caption: "Her radiant smile that lights up every room she walks into!",
+        tag: "thatyellow dress",
+        url: "pic/img4.jpg"
+      },
+      {
+        id: 2,
+        title: "Kargil Viewpoint & Bhutan Hills 🏔️",
+        caption: "Running up that hill with fearless Dora-the-Explorer energy!",
+        tag: "Explorer Era",
+        url: "pic/img207.jpg"
+      },
+      {
+        id: 3,
+        title: "MMLS Biochemistry Scholar 🧬",
+        caption: "Future leader in Biochemistry who will heal and help society.",
+        tag: "MMLS & NMCH",
+        url: "pic/img219.jpg"
+      },
+      {
+        id: 4,
+        title: "The Royal Purple Heart 💜",
+        caption: "Even in her own difficulties, she always reaches out to lift others up.",
+        tag: "Strong & Independent",
+        url: "pic/img55.jpg"
+      },
+      {
+        id: 5,
+        title: "Masor Video Raiz & Panimur 🎣🌊",
+        caption: "Making Assam fishing adventures and waterfalls look iconic!",
+        tag: "Assam Vibes",
+        url: "pic/img56.jpg"
+      },
+      {
+        id: 6,
+        title: "Graduated & Unstoppable 🎓🖤",
+        caption: "Sanskarii bhi hu, gym hustler, and 13.6K+ creator glow!",
+        tag: "Queen Energy",
+        url: "pic/img53.jpg"
+      }
+    ];
+
+    const HEART_NOTES = [
+      {
+        icon: "☀️",
+        title: "A Smile That Lights Up Everyone",
+        body: "Samima, your smile is pure sunshine. The moment you walk into a room or appear on screen, people's moods instantly lift up. Never lose that magic spark!"
+      },
+      {
+        icon: "💜",
+        title: "Why You Are 'Royal Purple' — Strong & Kind",
+        body: "What makes you truly extraordinary is your heart. Even when you are going through your own tough times and difficulties, you still put others first and try to help everyone around you. That rare empathy makes you a true Royal Purple—a fiercely strong, independent woman."
+      },
+      {
+        icon: "🧬",
+        title: "Shining in MMLS Biochemistry & Helping Society",
+        body: "Seeing you pursue MMLS Biochemistry fills me with pride. With your brilliant mind and compassionate soul, you are going to master it in the best way possible, serve society, and heal & shine on everyone around you!"
+      },
+      {
+        icon: "🧭",
+        title: "Our Real-Life Dora & Disney Princess",
+        body: "Whether it's Bhutan roads, Kargil Viewpoint, Panimur waterfalls, or viral fishing reels, you explore life fearlessly. As your bio says: 'Imperfection is beauty, madness is genius!'"
+      }
+    ];
+
+    const STAGES = [
+      {
+        id: 0,
+        z: 0,
+        x: 0,
+        badge: "Stage 1 • Royal Entrance",
+        title: "Welcome to Samima's Disneyland! ✨",
+        subtitle: "The Girl Whose Smile Lights Up The World",
+        doraSpeech: "¡Hola Samima! I'm your 3D Chibi Dora guide in 'that yellow dress'! Look beside the archway—your first 3D Royal Portrait is floating right there! Let's walk down the path!",
+        description: "Welcome to a 3D kingdom built exclusively for Samima Begum (@samimpriyu)—where your contagious smile turns ordinary days into pure Disney magic.",
+        noteHighlight: "✨ Note #1: Your smile has the superpower to light up everyone around you instantly.",
+        highlights: ["👑 Princess Samima", "☀️ Radiant Smile", "💛 That Yellow Dress", "🎒 3D Dora Guide"],
+        accent: "from-amber-400 to-pink-500"
+      },
+      {
+        id: 1,
+        z: -24,
+        x: -3.8,
+        badge: "Stage 2 • Adventure Peaks",
+        title: "Bhutan, Kargil Viewpoint & Panimur 🏔️",
+        subtitle: "Fearless Dora-Style Explorer",
+        doraSpeech: "¡Vámonos! Look at the snow peaks and turquoise waters! From Bhutan 🖤 and 'Running up that hill' at Kargil Viewpoint to Panimur & 'Masor video raiz' fishing reels!",
+        description: "Every great explorer has legendary checkpoints. Whether you're chasing mountain sunsets or making fishing in Assam go viral, you live life to the fullest!",
+        noteHighlight: "🧭 Note #2: Never stop exploring—your curiosity and playful madness are pure genius.",
+        highlights: ["🏔️ Bhutan 🖤", "🌊 Panimur, Umrangso 📍", "🎣 Masor Video Raiz!", "👀 Muk Saba??"],
+        accent: "from-emerald-400 to-cyan-500"
+      },
+      {
+        id: 2,
+        z: -48,
+        x: 3.8,
+        badge: "Stage 3 • MMLS Biochemistry Sanctuary",
+        title: "MMLS Biochemistry & Healing Society 🧬",
+        subtitle: "Spinning 3D DNA Helix & Future Brilliance",
+        doraSpeech: "Look at the glowing 3D DNA Helix spinning beside us! 🧬 You are going to rock MMLS Biochemistry in the best way possible and shine across society!",
+        description: "After celebrating 'Graduated 🖤', you stepped boldly into MMLS Biochemistry. Your dedication in the lab and at NMCH will help countless people and make society brighter.",
+        noteHighlight: "🧬 Wish For You: May you conquer MMLS Biochemistry with flying colors, serve society, and outshine every challenge!",
+        highlights: ["🧬 MMLS Biochemistry", "🎓 Graduated 🖤", "🏥 Helping Society", "📚 Future Leader"],
+        accent: "from-cyan-400 via-purple-400 to-pink-500"
+      },
+      {
+        id: 3,
+        z: -72,
+        x: -3.5,
+        badge: "Stage 4 • The Royal Purple Pavilion",
+        title: "Kindness in Difficulties & Purple Strength 💜",
+        subtitle: "Fiercely Strong, Independent & Compassionate",
+        doraSpeech: "See these glowing Purple Crystals and floating lanterns? 💜 Even when you face difficulties, you always help others first. That makes you a true Royal Purple Queen!",
+        description: "True strength is smiling and helping others even when your own road is hard. Your kindness, resilience, gym discipline, and independence make you truly purple—rare and royal.",
+        noteHighlight: "💜 Note #3: Even in difficulties, you lift others up. You are the strongest, kindest independent girl!",
+        highlights: ["💜 Royal Purple Soul", "🤝 Helps Others Always", "💪 Strong & Independent", "🌸 Sanskarii Bhi Hu"],
+        accent: "from-purple-500 via-fuchsia-500 to-amber-400"
+      },
+      {
+        id: 4,
+        z: -94,
+        x: 2.5,
+        badge: "Stage 5 • The Starlight Bridge",
+        title: "No Rain, No Flowers 🌷",
+        subtitle: "Imperfection is Beauty, Madness is Genius",
+        doraSpeech: "We're crossing the golden Starlight Bridge right in front of your castle! Every rainy day only helps your flowers bloom brighter!",
+        description: "“Imperfection is beauty, madness is genius and it's better to be absolutely ridiculous than absolutely boring.” Keep shining for your family, cousins, and 13.6K+ admirers!",
+        noteHighlight: "🌷 Note #4: Through every storm and rain, you bloom into someone more inspiring every single day.",
+        highlights: ["🌷 No Rain, No Flowers", "✨ 13.6K+ Creator Family", "💆🏻‍♀️ Collab & Glow Queen"],
+        accent: "from-amber-300 to-rose-500"
+      },
+      {
+        id: 5,
+        z: -115,
+        x: 0,
+        badge: "Final Destination • Oct 28, 00:00",
+        title: "Samima's Royal Disneyland Castle 🏰",
+        subtitle: "The Midnight-Locked Birthday Treasure Chest",
+        doraSpeech: "¡Lo hicimos! We reached your Royal Disneyland Castle! 🏰 Look at the golden treasure chest in front of the gate—it unlocks strictly at 00:00 on October 28!",
+        description: "You have walked through every chapter of your story! Stand before your glowing purple, pink & gold castle to unwrap your birthday letter at the stroke of midnight.",
+        noteHighlight: "🎂 Birthday Lock: The Royal Castle Treasure Chest opens strictly at 00:00 on October 28!",
+        highlights: ["🏰 Royal Castle Reached", "🕛 Midnight 00:00 Lock", "💌 Personal Birthday Letter"],
+        accent: "from-pink-500 via-purple-500 to-amber-400"
+      }
+    ];
+
+    // 1. Creates the Royal Purple & Gold Backing Card Texture (No external image tainting!)
+    function createFrameBackingTexture(photoObj) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 640;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 512, 640);
+      grad.addColorStop(0, '#2e1065');
+      grad.addColorStop(0.5, '#4c1d95');
+      grad.addColorStop(1, '#831843');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 512, 640);
+
+      // Gold Outer Border
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 14;
+      ctx.strokeRect(14, 14, 484, 612);
+
+      // Inner Placeholder Box (Behind the actual 3D Photo Plane)
+      ctx.fillStyle = '#1e1b4b';
+      ctx.fillRect(36, 36, 440, 440);
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(36, 36, 440, 440);
+
+      // Fallback text if local file path is missing or blocked by file:// protocol
+      ctx.fillStyle = '#c084fc';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('📸 Loading Photo...', 256, 240);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '15px sans-serif';
+      ctx.fillText(`(${photoObj.url})`, 256, 275);
+
+      // Bottom Caption Banner
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 25px Fredoka, sans-serif';
+      ctx.fillText(photoObj.title, 256, 525);
+
+      ctx.fillStyle = '#f5d0fe';
+      ctx.font = '20px sans-serif';
+      ctx.fillText(`@samimpriyu • ${photoObj.tag}`, 256, 565);
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'italic 18px serif';
+      ctx.fillText('✨ Samima Begum • Oct 28 ✨', 256, 602);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    // 2. Loads Local or Uploaded Photo directly onto the 3D Photo Plane
+    function applyPhotoTextureToMesh(photoMesh, url) {
+      if (!photoMesh) return;
+
+      // Method A: Direct Three.js TextureLoader (Works on GitHub Pages, localhost, and data URLs)
+      const loader = new THREE.TextureLoader();
+      loader.load(
+        url,
+        (tex) => {
+          tex.encoding = THREE.sRGBEncoding;
+          photoMesh.material.map = tex;
+          photoMesh.material.color.setHex(0xffffff);
+          photoMesh.material.transparent = false;
+          photoMesh.material.opacity = 1;
+          photoMesh.material.needsUpdate = true;
+        },
+        undefined,
+        () => {
+          // Fallback: Standard HTML Image without crossOrigin for local relative paths
+          const img = new Image();
+          img.onload = () => {
+            const tex = new THREE.Texture(img);
+            tex.needsUpdate = true;
+            photoMesh.material.map = tex;
+            photoMesh.material.color.setHex(0xffffff);
+            photoMesh.material.transparent = false;
+            photoMesh.material.opacity = 1;
+            photoMesh.material.needsUpdate = true;
+          };
+          img.src = url;
+        }
+      );
+    }
+
+    function App() {
+      const mountRef = useRef(null);
+      const [currentStage, setCurrentStage] = useState(0);
+      const [photos, setPhotos] = useState(INITIAL_PHOTOS);
+      const [showGalleryModal, setShowGalleryModal] = useState(false);
+      const [showNotesModal, setShowNotesModal] = useState(false);
+      const [now, setNow] = useState(Date.now());
+      const [letterOpened, setLetterOpened] = useState(false);
+      const [shakeLock, setShakeLock] = useState(false);
+      const [customSpeech, setCustomSpeech] = useState(null);
+      const [isFileProtocol, setIsFileProtocol] = useState(false);
+      const midnightConfettiFired = useRef(false);
+
+      // Refs for Three.js dynamic updates
+      const stageRef = useRef(0);
+      const photoPlaneMeshesRef = useRef([]);
+      const chestLidRef = useRef(null);
+      const letterOpenedRef = useRef(false);
+
+      useEffect(() => {
+        if (window.location.protocol === 'file:') {
+          setIsFileProtocol(true);
+        }
+      }, []);
+
+      useEffect(() => {
+        stageRef.current = currentStage;
+        setCustomSpeech(null);
+      }, [currentStage]);
+
+      useEffect(() => {
+        letterOpenedRef.current = letterOpened;
+      }, [letterOpened]);
+
+      // Real-time 1s Countdown Timer to Oct 28 00:00
+      useEffect(() => {
+        const timer = setInterval(() => {
+          const current = Date.now();
+          setNow(current);
+          if (current >= BIRTHDAY_UNLOCK_TIME && !midnightConfettiFired.current) {
+            midnightConfettiFired.current = true;
+            fireConfetti();
+          }
+        }, 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      const isUnlocked = now >= BIRTHDAY_UNLOCK_TIME;
+      const diff = Math.max(0, BIRTHDAY_UNLOCK_TIME - now);
+      const days = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+      const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, '0');
+      const minutes = String(Math.floor((diff / 1000 / 60) % 60)).padStart(2, '0');
+      const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+
+      function fireConfetti() {
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 120,
+            spread: 90,
+            origin: { y: 0.6 },
+            colors: ['#a855f7', '#facc15', '#ec4899', '#38bdf8', '#ffffff']
+          });
+        }
+      }
+
+      function handleTryOpenGift() {
+        if (!isUnlocked) {
+          setShakeLock(true);
+          setCustomSpeech("¡No, no, no! Swiper no peeking! 🛑 This Royal Disneyland Treasure Chest is strictly locked until 00:00 on October 28!");
+          setTimeout(() => setShakeLock(false), 500);
+          return;
+        }
+        setLetterOpened(true);
+        setCustomSpeech("¡Feliz Cumpleaños Princess Samima! 🎉🎂💜 It's past 00:00 on October 28! The Royal Treasure Chest is open!");
+        fireConfetti();
+        setTimeout(fireConfetti, 450);
+      }
+
+      // Live Photo Upload/Swap (Works even on file:// because FileReader generates a Base64 Data URL!)
+      function handlePhotoUpload(index, event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target.result;
+          setPhotos((prev) => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], url: dataUrl };
+            return updated;
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Bulk-load all 6 photos at once if testing on file:// without a local server
+      function handleBulkFolderSelect(event) {
+        const files = Array.from(event.target.files || []);
+        if (!files.length) return;
+        files.slice(0, 6).forEach((file, idx) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setPhotos((prev) => {
+              const updated = [...prev];
+              if (updated[idx]) {
+                updated[idx] = { ...updated[idx], url: e.target.result };
+              }
+              return updated;
+            });
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Update 3D Photo Planes whenever `photos` state changes
+      useEffect(() => {
+        photos.forEach((p, idx) => {
+          const mesh = photoPlaneMeshesRef.current[idx];
+          if (mesh) {
+            applyPhotoTextureToMesh(mesh, p.url);
+          }
+        });
+      }, [photos]);
+
+      // ============================================================================
+      // BUILD THE 3D DISNEYLAND WORLD + 3D DORA-SAMIMA + FLOATING PHOTO FRAMES
+      // ============================================================================
+      useEffect(() => {
+        const container = mountRef.current;
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0b0418);
+        scene.fog = new THREE.FogExp2(0x0b0418, 0.012);
+
+        const camera = new THREE.PerspectiveCamera(
+          55,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          320
+        );
+        camera.position.set(0, 4.5, 10);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        container.innerHTML = "";
+        container.appendChild(renderer.domElement);
+
+        // Royal Lighting
+        const ambientLight = new THREE.AmbientLight(0xf3e8ff, 0.85);
+        scene.add(ambientLight);
+
+        const moonLight = new THREE.DirectionalLight(0xfffbeb, 1.15);
+        moonLight.position.set(25, 50, 20);
+        moonLight.castShadow = true;
+        scene.add(moonLight);
+
+        const purplePavilionLight = new THREE.PointLight(0xa855f7, 2.8, 45);
+        purplePavilionLight.position.set(-4, 8, -72);
+        scene.add(purplePavilionLight);
+
+        const castleGlow = new THREE.PointLight(0xff4da6, 3.0, 75);
+        castleGlow.position.set(0, 16, -120);
+        scene.add(castleGlow);
+
+        // Ground Plane
+        const groundGeo = new THREE.PlaneGeometry(350, 350);
+        const groundMat = new THREE.MeshStandardMaterial({
+          color: 0x15092b,
+          roughness: 0.88
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Winding Golden Pathway
+        const pathPoints = [
+          new THREE.Vector3(0, 0.05, 6),
+          new THREE.Vector3(0, 0.05, 0),
+          new THREE.Vector3(-3.8, 0.05, -24),
+          new THREE.Vector3(3.8, 0.05, -48),
+          new THREE.Vector3(-3.5, 0.05, -72),
+          new THREE.Vector3(2.5, 0.05, -94),
+          new THREE.Vector3(0, 0.05, -115),
+          new THREE.Vector3(0, 0.05, -125)
+        ];
+        const pathCurve = new THREE.CatmullRomCurve3(pathPoints);
+        const tubeGeo = new THREE.TubeGeometry(pathCurve, 180, 1.75, 8, false);
+        const tubeMat = new THREE.MeshStandardMaterial({
+          color: 0xfbbf24,
+          emissive: 0x78350f,
+          emissiveIntensity: 0.4,
+          roughness: 0.35
+        });
+        const roadMesh = new THREE.Mesh(tubeGeo, tubeMat);
+        roadMesh.scale.set(1, 0.08, 1);
+        scene.add(roadMesh);
+
+        // Checkpoint Glowing Rings + 3D Floating Photo Frames at Every Stop!
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.65, roughness: 0.2 });
+        photoPlaneMeshesRef.current = [];
+        const floatingFrames = [];
+
+        STAGES.forEach((st, idx) => {
+          // Glowing Floor Ring
+          const ringGeo = new THREE.RingGeometry(1.9, 2.45, 32);
+          const ringMat = new THREE.MeshBasicMaterial({
+            color: idx === 3 ? 0xc084fc : 0xf472b6,
+            side: THREE.DoubleSide
+          });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.rotation.x = -Math.PI / 2;
+          ring.position.set(st.x, 0.12, st.z);
+          scene.add(ring);
+
+          // 3D Floating Royal Portrait Frame Group
+          const frameGroup = new THREE.Group();
+          const sideOffset = idx % 2 === 0 ? 4.3 : -4.3;
+          frameGroup.position.set(st.x + sideOffset, 3.6, st.z - 1.5);
+          frameGroup.rotation.y = idx % 2 === 0 ? -0.32 : 0.32;
+
+          // 1) Golden Outer 3D Box
+          const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(3.6, 4.4, 0.2), goldMat);
+          frameGroup.add(outerFrame);
+
+          // 2) Backing Card Plane (Title, Tag, Border)
+          const photoData = INITIAL_PHOTOS[idx];
+          const backingTex = createFrameBackingTexture(photoData);
+          const backingPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(3.3, 4.1),
+            new THREE.MeshBasicMaterial({ map: backingTex })
+          );
+          backingPlane.position.z = 0.11;
+          frameGroup.add(backingPlane);
+
+          // 3) Dedicated 3D Photo Plane (Positioned right inside the top square of the frame!)
+          const photoPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.84, 2.84),
+            new THREE.MeshBasicMaterial({
+              color: 0xffffff,
+              transparent: true,
+              opacity: 0 // Becomes 1 as soon as texture loads
+            })
+          );
+          photoPlane.position.set(0, 0.38, 0.125);
+          frameGroup.add(photoPlane);
+
+          // Load the local image (`pic/img4.jpg`, etc.) onto the 3D Photo Plane
+          applyPhotoTextureToMesh(photoPlane, photoData.url);
+
+          photoPlaneMeshesRef.current.push(photoPlane);
+          floatingFrames.push(frameGroup);
+          scene.add(frameGroup);
+        });
+
+        // ==========================================================
+        // 3D CHIBI DORA-SAMIMA CHARACTER
+        // ==========================================================
+        const doraGroup = new THREE.Group();
+
+        const skinMat = new THREE.MeshStandardMaterial({ color: 0xf3c6a5, roughness: 0.45 });
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.62, 24, 24), skinMat);
+        head.position.y = 2.35;
+        doraGroup.add(head);
+
+        const tiara = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.22, 12), goldMat);
+        tiara.position.set(0, 3.05, 0.08);
+        doraGroup.add(tiara);
+
+        const hairMat = new THREE.MeshStandardMaterial({ color: 0x1a1615, roughness: 0.7 });
+        const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.67, 24, 24), hairMat);
+        hairCap.position.set(0, 2.45, -0.08);
+        const leftCurl = new THREE.Mesh(new THREE.SphereGeometry(0.33, 16, 16), hairMat);
+        leftCurl.position.set(-0.56, 2.1, -0.05);
+        const rightCurl = new THREE.Mesh(new THREE.SphereGeometry(0.33, 16, 16), hairMat);
+        rightCurl.position.set(0.56, 2.1, -0.05);
+        doraGroup.add(hairCap, leftCurl, rightCurl);
+
+        const clipMat = new THREE.MeshStandardMaterial({ color: 0xec4899, emissive: 0x9d174d, emissiveIntensity: 0.3 });
+        const flowerClip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), clipMat);
+        flowerClip.position.set(0.48, 2.75, 0.35);
+        doraGroup.add(flowerClip);
+
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+        const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), eyeMat);
+        leftEye.position.set(-0.2, 2.38, 0.56);
+        const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), eyeMat);
+        rightEye.position.set(0.2, 2.38, 0.56);
+        doraGroup.add(leftEye, rightEye);
+
+        const dressMat = new THREE.MeshStandardMaterial({
+          color: 0xfacc15,
+          emissive: 0xca8a04,
+          emissiveIntensity: 0.25,
+          roughness: 0.35
+        });
+        const dress = new THREE.Mesh(new THREE.ConeGeometry(0.76, 1.35, 24), dressMat);
+        dress.position.y = 1.25;
+        doraGroup.add(dress);
+
+        const packMat = new THREE.MeshStandardMaterial({ color: 0x9333ea, emissive: 0x581c87, emissiveIntensity: 0.25 });
+        const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.76, 0.42), packMat);
+        backpack.position.set(0, 1.35, -0.45);
+        doraGroup.add(backpack);
+
+        const mapRoll = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.1, 0.55, 12),
+          new THREE.MeshStandardMaterial({ color: 0xfef08a })
+        );
+        mapRoll.position.set(0.38, 1.72, -0.45);
+        mapRoll.rotation.z = -0.35;
+        doraGroup.add(mapRoll);
+
+        const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.7, 12), skinMat);
+        leftArm.position.set(-0.62, 1.45, 0);
+        const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.7, 12), skinMat);
+        rightArm.position.set(0.62, 1.45, 0);
+        doraGroup.add(leftArm, rightArm);
+
+        const shoeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+        const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.65, 12), shoeMat);
+        leftLeg.position.set(-0.25, 0.35, 0);
+        const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.65, 12), shoeMat);
+        rightLeg.position.set(0.25, 0.35, 0);
+        doraGroup.add(leftLeg, rightLeg);
+
+        const charLight = new THREE.PointLight(0xfef08a, 1.8, 14);
+        charLight.position.set(0, 4, 2);
+        doraGroup.add(charLight);
+
+        scene.add(doraGroup);
+
+        // Stage 1 Archway
+        const archMat = new THREE.MeshStandardMaterial({ color: 0xc084fc, roughness: 0.3 });
+        const leftPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 7.5, 16), archMat);
+        leftPillar.position.set(-4.8, 3.75, -2);
+        const rightPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 7.5, 16), archMat);
+        rightPillar.position.set(4.8, 3.75, -2);
+        const topArch = new THREE.Mesh(new THREE.TorusGeometry(4.8, 0.42, 16, 40, Math.PI), goldMat);
+        topArch.position.set(0, 7.5, -2);
+        scene.add(leftPillar, rightPillar, topArch);
+
+        // Stage 2 Mountains & Pond
+        const mountainMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.8 });
+        const snowMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
+        [
+          { x: -15, z: -22, h: 17, r: 7.5 },
+          { x: -21, z: -29, h: 23, r: 9.5 },
+          { x: 14, z: -26, h: 19, r: 8 }
+        ].forEach((m) => {
+          const mt = new THREE.Mesh(new THREE.ConeGeometry(m.r, m.h, 7), mountainMat);
+          mt.position.set(m.x, m.h / 2, m.z);
+          scene.add(mt);
+          const cap = new THREE.Mesh(new THREE.ConeGeometry(m.r * 0.36, m.h * 0.35, 7), snowMat);
+          cap.position.set(m.x, m.h * 0.83, m.z);
+          scene.add(cap);
+        });
+
+        const pond = new THREE.Mesh(
+          new THREE.CircleGeometry(5.8, 32),
+          new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x0891b2, emissiveIntensity: 0.55 })
+        );
+        pond.rotation.x = -Math.PI / 2;
+        pond.position.set(-11, 0.08, -24);
+        scene.add(pond);
+
+        // Stage 3: 3D Spinning DNA Double Helix for MMLS Biochemistry
+        const dnaGroup = new THREE.Group();
+        dnaGroup.position.set(-2.5, 5.2, -48);
+        const strandMatA = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.7 });
+        const strandMatB = new THREE.MeshStandardMaterial({ color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.7 });
+        const rungMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xca8a04, emissiveIntensity: 0.4 });
+
+        for (let i = 0; i < 20; i++) {
+          const y = (i - 10) * 0.42;
+          const angle = i * 0.55;
+          const r = 1.35;
+
+          const sphereA = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), strandMatA);
+          sphereA.position.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
+          const sphereB = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), strandMatB);
+          sphereB.position.set(Math.cos(angle + Math.PI) * r, y, Math.sin(angle + Math.PI) * r);
+
+          const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, r * 2, 8), rungMat);
+          rung.position.set(0, y, 0);
+          rung.rotation.z = Math.PI / 2;
+          rung.rotation.y = -angle;
+
+          dnaGroup.add(sphereA, sphereB, rung);
+        }
+        scene.add(dnaGroup);
+
+        // Stage 4: Royal Purple Kindness Crystals
+        const crystalGroup = new THREE.Group();
+        crystalGroup.position.set(2.5, 0, -72);
+        const purpleCrystalMat = new THREE.MeshStandardMaterial({
+          color: 0xa855f7,
+          emissive: 0x7e22ce,
+          emissiveIntensity: 0.65,
+          roughness: 0.15,
+          metalness: 0.3
+        });
+
+        [
+          { x: 0, y: 3.2, z: 0, s: 1.4 },
+          { x: -2.2, y: 2.2, z: 1.2, s: 0.95 },
+          { x: 2.1, y: 2.4, z: -1.1, s: 1.05 },
+          { x: 0.8, y: 4.5, z: 1.5, s: 0.75 }
+        ].forEach((c) => {
+          const gem = new THREE.Mesh(new THREE.OctahedronGeometry(c.s, 0), purpleCrystalMat);
+          gem.position.set(c.x, c.y, c.z);
+          crystalGroup.add(gem);
+        });
+        scene.add(crystalGroup);
+
+        // Floating Lanterns
+        const lanterns = [];
+        const lanternGeo = new THREE.CylinderGeometry(0.35, 0.28, 0.9, 12);
+        const lanternMat = new THREE.MeshStandardMaterial({
+          color: 0xfef08a,
+          emissive: 0xf59e0b,
+          emissiveIntensity: 0.95
+        });
+        for (let i = 0; i < 36; i++) {
+          const mesh = new THREE.Mesh(lanternGeo, lanternMat);
+          mesh.position.set(
+            (Math.random() - 0.5) * 34,
+            3.5 + Math.random() * 14,
+            -40 - Math.random() * 65
+          );
+          scene.add(mesh);
+          lanterns.push({ mesh, speed: 0.4 + Math.random() * 0.8, offset: Math.random() * 6 });
+        }
+
+        // Stage 5 Bridge
+        for (let i = 0; i < 6; i++) {
+          const zPos = -86 - i * 3.2;
+          const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 3.4, 12), goldMat);
+          postL.position.set(-2.2, 1.7, zPos);
+          const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 3.4, 12), goldMat);
+          postR.position.set(6.5, 1.7, zPos);
+          const orbMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+          const orbL = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), orbMat);
+          orbL.position.set(-2.2, 3.6, zPos);
+          const orbR = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), orbMat);
+          orbR.position.set(6.5, 3.6, zPos);
+          scene.add(postL, postR, orbL, orbR);
+        }
+
+        // Stage 6 Disneyland Castle
+        const castleGroup = new THREE.Group();
+        castleGroup.position.set(0, 0, -128);
+
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5d0fe, roughness: 0.35 });
+        const roofMat = new THREE.MeshStandardMaterial({
+          color: 0x9333ea,
+          emissive: 0x581c87,
+          emissiveIntensity: 0.35,
+          roughness: 0.25
+        });
+
+        const keep = new THREE.Mesh(new THREE.BoxGeometry(15, 12.5, 10), wallMat);
+        keep.position.y = 6.25;
+        castleGroup.add(keep);
+
+        const gate = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 5.8, 24), goldMat);
+        gate.position.set(0, 2.9, 5.05);
+        castleGroup.add(gate);
+
+        const mainTower = new THREE.Mesh(new THREE.CylinderGeometry(2.9, 3.3, 23, 24), wallMat);
+        mainTower.position.set(0, 11.5, 0);
+        const mainSpire = new THREE.Mesh(new THREE.ConeGeometry(3.6, 9.5, 24), roofMat);
+        mainSpire.position.set(0, 27.5, 0);
+        castleGroup.add(mainTower, mainSpire);
+
+        [
+          { x: -8.0, z: 4, h: 15.5, r: 1.9 },
+          { x: 8.0, z: 4, h: 15.5, r: 1.9 },
+          { x: -5.8, z: -3, h: 18.5, r: 2.2 },
+          { x: 5.8, z: -3, h: 18.5, r: 2.2 }
+        ].forEach((t) => {
+          const tw = new THREE.Mesh(new THREE.CylinderGeometry(t.r, t.r * 1.1, t.h, 20), wallMat);
+          tw.position.set(t.x, t.h / 2, t.z);
+          const sp = new THREE.Mesh(new THREE.ConeGeometry(t.r * 1.35, 6.5, 20), roofMat);
+          sp.position.set(t.x, t.h + 3.25, t.z);
+          castleGroup.add(tw, sp);
+        });
+
+        scene.add(castleGroup);
+
+        // 3D Royal Birthday Treasure Chest
+        const chestGroup = new THREE.Group();
+        chestGroup.position.set(0, 0.7, -118.5);
+        const chestBase = new THREE.Mesh(
+          new THREE.BoxGeometry(2.2, 1.2, 1.5),
+          new THREE.MeshStandardMaterial({ color: 0x7e22ce, roughness: 0.3 })
+        );
+        const chestLid = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.75, 0.75, 2.2, 16, 1, false, 0, Math.PI),
+          goldMat
+        );
+        chestLid.rotation.z = Math.PI / 2;
+        chestLid.position.y = 0.6;
+        chestLidRef.current = chestLid;
+        chestGroup.add(chestBase, chestLid);
+        scene.add(chestGroup);
+
+        // Starfield
+        const starsGeo = new THREE.BufferGeometry();
+        const starCount = 1500;
+        const starPositions = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount * 3; i += 3) {
+          starPositions[i] = (Math.random() - 0.5) * 240;
+          starPositions[i + 1] = 8 + Math.random() * 85;
+          starPositions[i + 2] = 20 - Math.random() * 195;
+        }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        const starsMat = new THREE.PointsMaterial({ color: 0xfffbeb, size: 0.45 });
+        const starField = new THREE.Points(starsGeo, starsMat);
+        scene.add(starField);
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+        let animationFrameId;
+
+        const animate = () => {
+          animationFrameId = requestAnimationFrame(animate);
+          const elapsed = clock.getElapsedTime();
+          const targetStage = STAGES[stageRef.current];
+
+          const dx = targetStage.x - doraGroup.position.x;
+          const dz = targetStage.z - doraGroup.position.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+
+          doraGroup.position.x += dx * 0.045;
+          doraGroup.position.z += dz * 0.045;
+
+          if (dist > 0.35) {
+            doraGroup.position.y = Math.abs(Math.sin(elapsed * 10)) * 0.25;
+            leftLeg.rotation.x = Math.sin(elapsed * 10) * 0.6;
+            rightLeg.rotation.x = -Math.sin(elapsed * 10) * 0.6;
+            leftArm.rotation.x = -Math.sin(elapsed * 10) * 0.5;
+            rightArm.rotation.x = Math.sin(elapsed * 10) * 0.5;
+            doraGroup.rotation.y = Math.PI;
+          } else {
+            doraGroup.position.y = Math.sin(elapsed * 3) * 0.08;
+            doraGroup.rotation.y += (0 - doraGroup.rotation.y) * 0.08;
+            leftLeg.rotation.x = 0;
+            rightLeg.rotation.x = 0;
+            leftArm.rotation.x = 0;
+            rightArm.rotation.z = 2.4 + Math.sin(elapsed * 8) * 0.35;
+          }
+
+          // Gently bob the 3D Floating Photo Frames
+          floatingFrames.forEach((fg, idx) => {
+            fg.position.y = 3.6 + Math.sin(elapsed * 2 + idx) * 0.15;
+          });
+
+          // Spin DNA Helix & Crystals
+          dnaGroup.rotation.y = elapsed * 0.85;
+          dnaGroup.position.y = 5.2 + Math.sin(elapsed * 2) * 0.25;
+
+          crystalGroup.children.forEach((gem, idx) => {
+            gem.rotation.y = elapsed * (0.6 + idx * 0.15);
+            gem.position.y += Math.sin(elapsed * 2.5 + idx) * 0.005;
+          });
+
+          if (chestLidRef.current) {
+            const targetRotX = letterOpenedRef.current ? -1.1 : 0;
+            chestLidRef.current.rotation.x += (targetRotX - chestLidRef.current.rotation.x) * 0.08;
+          }
+
+          const desiredCamX = doraGroup.position.x * 0.65;
+          const desiredCamY = stageRef.current === 5 ? 5.4 : 4.3;
+          const desiredCamZ = doraGroup.position.z + 9.8;
+
+          camera.position.x += (desiredCamX - camera.position.x) * 0.04;
+          camera.position.y += (desiredCamY - camera.position.y) * 0.04;
+          camera.position.z += (desiredCamZ - camera.position.z) * 0.04;
+          camera.lookAt(
+            doraGroup.position.x * 0.4,
+            stageRef.current === 5 ? 5.6 : 2.5,
+            doraGroup.position.z - 12
+          );
+
+          lanterns.forEach((l) => {
+            l.mesh.position.y += Math.sin(elapsed * l.speed + l.offset) * 0.012;
+          });
+
+          renderer.render(scene, camera);
+        };
+        animate();
+
+        const handleResize = () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          cancelAnimationFrame(animationFrameId);
+        };
+      }, []);
+
+      const activeStage = STAGES[currentStage];
+      const activePhoto = photos[currentStage];
+
+      return (
+        <div className="relative w-screen h-screen overflow-hidden select-none text-white">
+          {/* 3D WebGL World Canvas */}
+          <div ref={mountRef} className="absolute inset-0 z-0" />
+
+          {/* TOP ROYAL NAVIGATION BAR */}
+          <header className="relative z-20 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-2.5 bg-slate-950/75 backdrop-blur-md border-b border-purple-400/30">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">🏰</span>
+              <div>
+                <h1 className="font-adventure text-sm sm:text-base font-bold text-amber-300 leading-none">
+                  Samima's 3D Disneyland • Royal Purple Edition 💜
+                </h1>
+                <p className="text-[11px] text-purple-300">
+                  MMLS Biochemistry Scholar • Kind & Independent Queen • Oct 28
+                </p>
+              </div>
+            </div>
+
+            {/* Step-by-Step 3D Checkpoint Selector */}
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              {STAGES.map((s, idx) => (
+                <button
+                  key={s.id}
+                  onClick={() => setCurrentStage(idx)}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full font-adventure font-bold text-xs transition flex items-center justify-center border ${
+                    currentStage === idx
+                      ? "bg-gradient-to-r from-amber-400 via-purple-500 to-pink-500 text-white border-white scale-110 shadow-lg"
+                      : idx < currentStage
+                      ? "bg-purple-600/50 border-purple-300 text-white"
+                      : "bg-slate-900/70 border-slate-700 text-slate-400 hover:border-amber-400"
+                  }`}
+                  title={s.title}
+                >
+                  {idx === 2 ? "🧬" : idx === 3 ? "💜" : idx === 5 ? "🏰" : idx + 1}
+                </button>
+              ))}
+            </div>
+
+            {/* Quick Action Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowGalleryModal(true)}
+                className="px-3 py-1.5 rounded-full bg-purple-600/40 hover:bg-purple-600/70 border border-purple-300/50 text-xs font-semibold flex items-center gap-1 transition"
+              >
+                <span>📸</span> Her Photos
+              </button>
+              <button
+                onClick={() => setShowNotesModal(true)}
+                className="px-3 py-1.5 rounded-full bg-pink-600/40 hover:bg-pink-600/70 border border-pink-300/50 text-xs font-semibold flex items-center gap-1 transition"
+              >
+                <span>💜</span> Notes For Her
+              </button>
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/90 border border-amber-400/40 text-xs font-semibold">
+                <span className="text-amber-300">
+                  {isUnlocked ? "🔓 00:00 Reached!" : "🔒 Oct 28 (00:00):"}
+                </span>
+                {!isUnlocked && (
+                  <span className="font-mono text-pink-300 font-bold">
+                    {days}d:{hours}h:{minutes}m:{seconds}s
+                  </span>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {/*Helpful Banner ONLY if opened via double-click file:// protocol */}
+          {isFileProtocol && (
+            <div className="relative z-20 bg-amber-500/90 text-slate-950 px-4 py-1.5 text-xs font-semibold flex flex-wrap items-center justify-between gap-2">
+              <span>
+                💡 <strong>Local File Tip:</strong> Chrome blocks WebGL 3D textures on <code>file://</code> URLs. Run <code>python3 -m http.server 8000</code> (or push to GitHub Pages), OR select your 6 images right here to preview in 3D:
+              </span>
+              <label className="cursor-pointer px-3 py-0.5 rounded-full bg-slate-950 text-amber-300 font-bold hover:opacity-90">
+                📂 Select 6 Photos Now
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleBulkFolderSelect}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
+
+          {/* BOTTOM INTERACTIVE HUD */}
+          <div className="absolute bottom-3 left-0 right-0 z-20 px-3 sm:px-6 pointer-events-none">
+            <div className="max-w-6xl mx-auto grid md:grid-cols-12 gap-3 items-end">
+
+              {/* Left Column: Dora-Samima Speech + Mini Framed Photo of Current Stage */}
+              <div className="md:col-span-5 glass-royal rounded-3xl p-4 pointer-events-auto flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={activePhoto.url}
+                    alt={activePhoto.title}
+                    onClick={() => setShowGalleryModal(true)}
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-amber-400 shadow-md cursor-pointer hover:scale-105 transition flex-shrink-0"
+                    title="Click to open full Photo Gallery & swap photos"
+                  />
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-adventure font-bold uppercase tracking-wider text-amber-300">
+                        🧭 3D Dora-Samima Guide
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40">
+                        Stop {currentStage + 1}/{STAGES.length}
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-amber-50 leading-snug font-medium mt-1">
+                      “{customSpeech || activeStage.doraSpeech}”
+                    </p>
+                  </div>
+                </div>
+
+                <div className="px-3 py-2 rounded-2xl bg-purple-950/70 border border-purple-400/40 text-xs text-purple-200 font-medium flex items-center justify-between gap-2">
+                  <span>{activeStage.noteHighlight}</span>
+                  <button
+                    onClick={() => setShowNotesModal(true)}
+                    className="text-[11px] text-amber-300 underline whitespace-nowrap"
+                  >
+                    Read All →
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Current 3D Scene Story & Step-by-Step Navigation */}
+              <div className={`md:col-span-7 glass-royal rounded-3xl p-4 sm:p-5 pointer-events-auto ${shakeLock ? "animate-shake" : ""}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                  <span className={`text-[11px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-gradient-to-r ${activeStage.accent} text-slate-950`}>
+                    {activeStage.badge}
+                  </span>
+                  <a
+                    href="https://www.instagram.com/samimpriyu/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-pink-300 hover:text-amber-300 underline font-semibold"
+                  >
+                    @samimpriyu 🩷
+                  </a>
+                </div>
+
+                <h2 className="font-adventure text-lg sm:text-2xl font-bold text-white mt-0.5">
+                  {activeStage.title}
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-200 mt-1 leading-relaxed">
+                  {activeStage.description}
+                </p>
+
+                <div className="flex flex-wrap gap-1.5 mt-2.5">
+                  {activeStage.highlights.map((h, i) => (
+                    <span
+                      key={i}
+                      className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-300/30 text-amber-200"
+                    >
+                      {h}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-3 border-t border-white/10">
+                  <button
+                    onClick={() => setCurrentStage((prev) => Math.max(0, prev - 1))}
+                    disabled={currentStage === 0}
+                    className={`px-3.5 py-2 rounded-xl font-adventure font-bold text-xs sm:text-sm transition ${
+                      currentStage === 0
+                        ? "bg-slate-800/50 text-slate-500 cursor-not-allowed"
+                        : "bg-slate-800 hover:bg-slate-700 text-white border border-slate-600"
+                    }`}
+                  >
+                    ← Back
+                  </button>
+
+                  {currentStage < STAGES.length - 1 ? (
+                    <button
+                      onClick={() => setCurrentStage((prev) => Math.min(STAGES.length - 1, prev + 1))}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-purple-500 to-pink-500 text-white font-adventure font-bold text-xs sm:text-sm shadow-lg hover:scale-105 transition transform"
+                    >
+                      Walk to Next Stop 🧭 →
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleTryOpenGift}
+                      className={`px-5 py-2.5 rounded-xl font-adventure font-bold text-xs sm:text-sm shadow-lg transition transform ${
+                        isUnlocked
+                          ? "bg-gradient-to-r from-emerald-400 via-amber-300 to-pink-500 text-slate-950 hover:scale-105 animate-pulse"
+                          : "bg-slate-900 border border-rose-400/60 text-rose-300 hover:bg-slate-800"
+                      }`}
+                    >
+                      {isUnlocked
+                        ? "🎁 Unwrap Royal Birthday Gift ✨"
+                        : `🔒 Locked Until Oct 28, 00:00 (${days}d ${hours}h ${minutes}m ${seconds}s)`}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* MODAL 1: SAMIMA'S PHOTO MEMORIES GALLERY */}
+          {showGalleryModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+              <div className="max-w-4xl w-full max-h-[88vh] overflow-y-auto rounded-3xl glass-royal p-6 sm:p-8 text-white relative">
+                <button
+                  onClick={() => setShowGalleryModal(false)}
+                  className="sticky top-2 float-right w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm"
+                >
+                  ✕
+                </button>
+                <span className="text-xs font-bold uppercase tracking-widest text-amber-300">
+                  📸 Floating 3D Disneyland Portraits
+                </span>
+                <h3 className="font-adventure text-2xl sm:text-3xl font-bold text-white mt-1">
+                  Samima's Royal Photo Gallery ✨
+                </h3>
+                <p className="text-xs sm:text-sm text-purple-200 mt-1 mb-6">
+                  Each photo below floats in 3D right beside its checkpoint on the Disneyland path!
+                </p>
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {photos.map((p, idx) => (
+                    <div
+                      key={p.id}
+                      className="rounded-2xl bg-slate-900/90 border border-purple-400/40 overflow-hidden shadow-lg flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="relative h-52 overflow-hidden bg-slate-800">
+                          <img
+                            src={p.url}
+                            alt={p.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-purple-900/80 border border-amber-300/40 text-[10px] font-bold text-amber-300">
+                            Stage {idx + 1} • {p.tag}
+                          </span>
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-adventure font-bold text-base text-amber-300">
+                            {p.title}
+                          </h4>
+                          <p className="text-xs text-slate-300 mt-1">
+                            {p.caption}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="px-4 pb-4 flex items-center justify-between gap-2">
+                        <button
+                          onClick={() => {
+                            setCurrentStage(idx);
+                            setShowGalleryModal(false);
+                          }}
+                          className="text-xs font-semibold text-pink-300 hover:text-amber-300"
+                        >
+                          Fly to 3D Frame →
+                        </button>
+                        <label className="cursor-pointer px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-semibold text-purple-200 transition">
+                          Swap Photo 📁
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handlePhotoUpload(idx, e)}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL 2: DEDICATED HEARTFELT NOTES */}
+          {showNotesModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+              <div className="max-w-3xl w-full max-h-[88vh] overflow-y-auto rounded-3xl glass-royal p-6 sm:p-8 text-white relative">
+                <button
+                  onClick={() => setShowNotesModal(false)}
+                  className="sticky top-2 float-right w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm"
+                >
+                  ✕
+                </button>
+                <span className="text-xs font-bold uppercase tracking-widest text-amber-300">
+                  💜 Royal Scroll of Appreciation
+                </span>
+                <h3 className="font-adventure text-2xl sm:text-3xl font-bold text-white mt-1 mb-6">
+                  Why Samima Is So Special & Royal Purple ✨
+                </h3>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {HEART_NOTES.map((note, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-2xl bg-purple-950/60 border border-purple-400/40 p-5 shadow-md"
+                    >
+                      <div className="text-3xl mb-2">{note.icon}</div>
+                      <h4 className="font-adventure text-lg font-bold text-amber-300">
+                        {note.title}
+                      </h4>
+                      <p className="text-xs sm:text-sm text-slate-200 mt-2 leading-relaxed">
+                        {note.body}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL 3: ROYAL BIRTHDAY LETTER (STRICTLY LOCKED UNTIL OCT 28 00:00:00) */}
+          {letterOpened && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+              <div className="max-w-xl w-full max-h-[90vh] overflow-y-auto rounded-3xl bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 border-2 border-amber-400 p-6 sm:p-8 shadow-2xl text-white relative">
+                <button
+                  onClick={() => setLetterOpened(false)}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm"
+                >
+                  ✕
+                </button>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-4xl">👑</span>
+                  <div>
+                    <span className="text-[11px] uppercase tracking-widest text-amber-300 font-bold">
+                      Unlocked at 00:00 • October 28
+                    </span>
+                    <h3 className="font-adventure text-2xl sm:text-3xl font-bold text-pink-400">
+                      Happy Birthday, Princess Samima! 🎂💜
+                    </h3>
+                  </div>
+                </div>
+                <div className="space-y-3.5 text-sm sm:text-base text-slate-200 leading-relaxed">
+                  <p>Dear <strong>Samima</strong>,</p>
+                  <p>
+                    Welcome to the heart of your very own Disneyland! Just like Dora exploring the world with fearless curiosity, you turn every single moment into pure magic. Your smile is so warm and radiant that it immediately lights up everyone around you.
+                  </p>
+                  <p>
+                    What I admire most about you is your <strong>Royal Purple heart</strong>. Even when you are facing your own difficulties and tough days, you never stop caring for others and helping the people around you. That rare kindness, paired with your fierce independence, makes you one of the strongest women in the world.
+                  </p>
+                  <p>
+                    As you pursue your <strong>MMLS in Biochemistry</strong>, I wish with all my heart that you achieve it in the absolute best way possible. You are going to help society, heal lives, and shine your light on everyone lucky enough to cross your path!
+                  </p>
+                  <p className="font-serif-royal italic text-amber-300 text-lg pt-2">
+                    “Imperfection is beauty, madness is genius...” Happy October 28th, my most beloved friend! ✨🌷🧬🏰
+                  </p>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={fireConfetti}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-purple-500 to-pink-500 text-white font-adventure font-bold text-sm shadow-lg"
+                  >
+                    🎉 Launch Royal Castle Fireworks
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
